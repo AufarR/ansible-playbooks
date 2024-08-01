@@ -1,0 +1,62 @@
+- name: Compile & Install Yara on RedHat/Debian via Ansible 
+  hosts: "{{ cmdhost | default('yara') }}"
+  vars_prompt:
+  - name: url
+    prompt: Enter Yara source tarball URL (e.g. https://link.com/yara.tar.gz)
+    private: false
+  - name: version
+    prompt: Enter Yara source version (e.g. 4.5.1)
+    private: false
+  tasks:
+  - name: Main block
+    block:
+    - name: Install build requirements (yum)
+      become: true
+      command: yum -y install make automake gcc autoconf libtool pkg-config jq
+      when: ansible_facts['os_family'] == "RedHat"
+    - name: Install OpenSSL development libraries for RedHat 8+ (Build manually on RedHat <= 7)
+      become: true
+      command: yum -y install openssl-devel
+      when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] > "7"
+    - name: Install build requirements (apt)
+      become: true
+      command: apt -y install make gcc autoconf libtool libssl-dev pkg-config jq
+      when: ansible_facts['os_family'] == "Debian"
+    - name: Download Yara release tarball
+      get_url:
+       url: "{{ url }}"
+       dest: "/tmp/yara.tgz"
+    - name: Unarchive Yara tarball
+      unarchive:
+       src: "/tmp/yara.tgz"
+       dest: "/tmp"
+       remote_src: yes
+    - name: Bootstrap Yara build
+      command: "chdir=/tmp/yara-{{version}} ./bootstrap.sh"
+    - name: Configure Yara build
+      command: "chdir=/tmp/yara-{{version}} ./configure"
+    - name: Compile Yara
+      command: "chdir=/tmp/yara-{{version}} make"
+    - name: Install compiled Yara
+      become: true
+      command: "chdir=/tmp/yara-{{version}} make install"
+    - name: Fix Libyara loading issue (Debian-based)
+      become: true
+      command: echo "/usr/local/lib" >> /etc/ld.so.conf && ldconfig
+      when: ansible_facts['os_family'] == "Debian"
+    - name: Get Yara version
+      command: yara -v
+      register: yaraver
+    - name: Debug Yara version
+      debug:
+       var: yaraver.stdout_lines
+    always:
+    - name: File cleanup (1)
+      file:
+       path: "/tmp/yara.tgz"
+       state: absent
+    - name: File cleanup (2)
+      file:
+       path: "/tmp/yara-{{version}}"
+       state: absent
+ 
