@@ -1,0 +1,61 @@
+- name: Offline Install Yara on Debian/RedHat-based systems via Ansible
+  hosts: "{{ cmdhost | default('yara') }}"
+  vars:
+   rpmc: "rpm -ivh * --force"
+   debc: "dpkg -i *"
+   dist_list:
+   - dist: "Debian"
+     ver: "20"
+     loc: "pkg/focal/" # Relative to Playbook path, not shell working directory
+     cmd: "{{debc}}"
+   - dist: "Debian"
+     ver: "22"
+     loc: "pkg/jammy/"
+     cmd: "{{debc}}"
+   - dist: "Debian"
+     ver: "24"
+     loc: "pkg/noble/"
+     cmd: "{{debc}}"
+   - dist: "RedHat"
+     ver: "7"
+     loc: "pkg/el7/"
+     cmd: "{{rpmc}}"
+   - dist: "RedHat"
+     ver: "8"
+     loc: "pkg/el8/"
+     cmd: "{{rpmc}}"
+   - dist: "RedHat"
+     ver: "9"
+     loc: "pkg/el9/"
+     cmd: "{{rpmc}}"
+  tasks:
+  - name: Get distribution settings
+    set_fact:
+     dist_settings: "{{ dist_list | selectattr('dist', 'equalto', ansible_os_family) | selectattr('ver', 'equalto', ansible_distribution_major_version) | first }}"
+
+  - name: Main block
+    block:
+    - name: Copy files
+      copy:
+       src: "{{ dist_settings.loc }}"
+       dest: /tmp/pkgs/
+
+    - name: Install packages
+      become: true
+      shell:
+       cmd: "{{ dist_settings.cmd }}"
+       chdir: /tmp/pkgs
+
+    - name: Get Yara version
+      command: yara -v
+      register: yaraver
+
+    - name: Debug Yara version
+      debug:
+       var: yaraver.stdout_lines
+
+    always:
+    - name: File cleanup
+      file:
+       path: "/tmp/pkgs"
+       state: absent
