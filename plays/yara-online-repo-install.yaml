@@ -33,6 +33,7 @@
 
   - name: Install Yara on RedHat-based OS
     command: "yum install -y yara {{ (status == 'needs_restart') | ternary('--repofrompath AppStream,https://vault.centos.org/centos/8-stream/AppStream/x86_64/os/ --repofrompath BaseOS,https://vault.centos.org/centos/8-stream/BaseOS/x86_64/os/', '') }}"
+    when: ansible_facts['os_family'] == "RedHat"
 
   - name: Fix Libyara loading issue on Ubuntu
     command: echo "/usr/local/lib" >> /etc/ld.so.conf && ldconfig
