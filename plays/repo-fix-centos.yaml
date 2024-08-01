@@ -1,0 +1,29 @@
+- name: CentOS <=8 Yum Repo Link Updater via Ansible
+  hosts: "{{ cmdhost | default('centos') }}"
+  become: true
+  tasks:
+  - name: Get list of Yum repo files
+    find:
+     paths: "/etc/yum.repos.d/"
+     patterns: "CentOS-*"
+    register: repos
+  - name: Comment out mirrorlink.centos.org lines
+    replace:
+     path: "{{ item.path }}"
+     regexp: 'mirrorlist'
+     replace: '#mirrorlist'
+    with_items: "{{ repos.files }}"
+  - name: Uncomment mirror.centos.org lines & change to vault.centos.org
+    replace:
+     path: "{{ item.path }}"
+     regexp: '#baseurl=http://mirror\.centos\.org'
+     replace: 'baseurl=http://vault.centos.org'
+    with_items: "{{ repos.files }}"
+  - name: Update yum package cache
+    command: yum makecache -y
+    register: yumcache
+  - name: Debug yum package cache update results
+    debug:
+     var: yumcache.stdout_lines
+  
+  
