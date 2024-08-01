@@ -36,7 +36,7 @@
   
   - name: Show distribution settings
     debug:
-     msg: "{{ansible_facts['dist_settings']}}" 
+     msg: "{{ dist_settings }}" 
 
   - name: Main block
     block:
