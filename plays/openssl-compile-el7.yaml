@@ -1,0 +1,58 @@
+- name: CentOS/RHEL <=7 Compiled OpenSSL Updater via Ansible
+  hosts: "{{ cmdhost | default('el7') }}"
+  vars_prompt:
+  - name: url
+    prompt: Enter OpenSSH source tarball URL (e.g. https://link.com/openssh.tar.gz)
+    private: false
+  - name: version
+    prompt: Enter OpenSSH source version (e.g. 3.3.1)
+    private: false
+  tasks:
+  - name: Main block
+    block:
+    - name: Install build requirements
+      become: true
+      command: yum -y install make gcc perl-core pcre-devel wget zlib-devel
+    - name: Download OpenSSL release tarball
+      get_url:
+       url: "{{ url }}"
+       dest: "/tmp/openssl.tgz"
+    - name: Unarchive OpenSSL tarball
+      unarchive:
+       src: "/tmp/openssl.tgz"
+       dest: "/tmp"
+       remote_src: yes
+    - name: Configure OpenSSL build
+      command: "chdir=/tmp/openssl-{{version}} ./config --prefix=/usr --openssldir=/etc/ssl --libdir=lib -zlib-dynamic"
+    - name: Compile OpenSSL
+      command: "chdir=/tmp/openssl-{{version}} make"
+    - name: Test compiled OpenSSL
+      ignore_errors: true
+      command: "chdir=/tmp/openssl-{{version}} make test"
+    - name: Install compiled OpenSSL
+      become: true
+      command: "chdir=/tmp/openssl-{{version}} make install"
+    - name: Update Ldconfig
+      become: true
+      copy:
+       mode: '0644'
+       dest: /etc/ld.so.conf.d/openssl.conf
+       content: "/usr/lib\n/usr/lib64"
+    - name: Apply Ldconfig
+      become: true
+      command: ldconfig
+    - name: Get OpenSSL version
+      command: openssl version
+      register: sslver
+    - name: Debug OpenSSL version
+      debug:
+       var: sslver.stdout_lines
+    always:
+    - name: File cleanup (1)
+      file:
+       path: "/tmp/openssl.tgz"
+       state: absent
+    - name: File cleanup (2)
+      file:
+       path: "/tmp/openssl-{{version}}"
+       state: absent
