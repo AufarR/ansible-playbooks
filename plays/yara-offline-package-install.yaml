@@ -33,6 +33,10 @@
     set_fact:
      dist_settings: "{{ dist_list | selectattr('dist', 'equalto', ansible_os_family) | 
       selectattr('ver', 'equalto', ansible_distribution_major_version) | first }}"
+  
+  - name: Show distribution settings
+    debug:
+     var: ansible_facts.dist_settings
 
   - name: Main block
     block:
