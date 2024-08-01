@@ -1,0 +1,44 @@
+- name: Install Yara on RHEL/CentOS 6+ & Ubuntu 14.04+ via Ansible 
+  hosts: "{{ cmdhost | default('yara') }}"
+  become: true
+  tasks:
+  - name: Clean package cache on Ubuntu
+    command: apt clean
+    when: ansible_facts['os_family'] == "Debian"
+
+  - name: Clean package cache on RedHat-based OS
+    command: yum clean all
+    when: ansible_facts['os_family'] == "RedHat"
+
+  - name: Install EPEL repo on Centos/RHEL 6-7
+    command: rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm --force
+    when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] <= "7"
+
+  - name: Install CentOS project key on CentOS 8 Linux
+    command: rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256
+    when: ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "8" and ansible_facts["distribution_release"] != "Stream"
+
+  - name: Install Yara on Ubuntu 14+
+    command: apt -y install yara
+    when: ansible_facts['os_family'] == "Debian"
+
+  - name: Install Yara on RedHat-based OS (except CentOS 8 Linux)
+    command: yum -y install yara
+    when: ansible_facts['os_family'] == "RedHat" and not (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "8" and ansible_facts["distribution_release"] != "Stream")
+
+  - name: Install Yara on CentOS 8 Linux
+    command: yum install -y yara --repofrompath AppStream,https://vault.centos.org/centos/8-stream/AppStream/x86_64/os/ --repofrompath BaseOS,https://vault.centos.org/centos/8-stream/BaseOS/x86_64/os/
+    when: ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "8" and ansible_facts["distribution_release"] != "Stream"
+
+  - name: Fix Libyara loading issue on Ubuntu
+    command: echo "/usr/local/lib" >> /etc/ld.so.conf && ldconfig
+    when: ansible_facts['os_family'] == "Debian"
+
+  - name: Get Yara version
+    command: yara -v
+    register: yaraver
+
+  - name: Debug Yara version
+    debug:
+     var: yaraver.stdout_lines
+  
