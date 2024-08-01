@@ -25,14 +25,16 @@
 
   - name: Install CentOS project key on CentOS 8 Linux
     command: rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official-SHA256
-    when: ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "8" and ansible_facts["distribution_release"] != "Stream"
+    when: ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '8' and ansible_facts['distribution_release'] != 'Stream'
 
   - name: Install Yara on Ubuntu
     command: apt -y install yara
     when: ansible_facts['os_family'] == "Debian"
 
   - name: Install Yara on RedHat-based OS
-    command: "yum install -y yara {{ (status == 'needs_restart') | ternary('--repofrompath AppStream,https://vault.centos.org/centos/8-stream/AppStream/x86_64/os/ --repofrompath BaseOS,https://vault.centos.org/centos/8-stream/BaseOS/x86_64/os/', '') }}"
+    command: "yum install -y yara 
+     {{ (ansible_facts['distribution'] == 'CentOS' and ansible_facts['distribution_major_version'] == '8' and ansible_facts['distribution_release'] != 'Stream')
+     | ternary('--repofrompath AppStream,https://vault.centos.org/centos/8-stream/AppStream/x86_64/os/ --repofrompath BaseOS,https://vault.centos.org/centos/8-stream/BaseOS/x86_64/os/', '') }}"
     when: ansible_facts['os_family'] == "RedHat"
 
   - name: Fix Libyara loading issue on Ubuntu
