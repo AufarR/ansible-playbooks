@@ -36,7 +36,7 @@
   
   - name: Show distribution settings
     debug:
-     var: ansible_facts.dist_settings
+     var: ansible_facts['dist_settings']
 
   - name: Main block
     block:
