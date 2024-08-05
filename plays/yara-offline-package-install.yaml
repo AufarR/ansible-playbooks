@@ -1,9 +1,9 @@
 - name: Offline Install Yara on Debian/RedHat-based systems via Ansible
-  hosts: "{{ cmdhost | default('yara') }}" # Use cmdhost variabel (e.g. -e "cmdhost=all") to overwrite target host
+  hosts: "{{ cmdhost | default('yara') }}" # Use cmdhost variable (e.g. -e "cmdhost=all") to overwrite target host
   vars:
-   rpmc: "rpm -ivh * --force"
-   debc: "dpkg -i *"
-   dist_list:
+   rpmc: "rpm -ivh * --force" # RPM install command
+   debc: "dpkg -i *" # DPKG install command
+   dist_list: # Install configurations for each distribution
    - dist: "Debian"
      ver: "20"
      loc: "pkg/focal/" # Relative to Playbook path
