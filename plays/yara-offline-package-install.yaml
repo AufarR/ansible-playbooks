@@ -63,7 +63,7 @@
 
     - name: Debug Yara version
       debug:
-       var: yaraver.stdout_lines
+       var: yaraver.stdout
 
     always:
     - name: File cleanup
