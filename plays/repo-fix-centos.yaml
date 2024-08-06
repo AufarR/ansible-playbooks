@@ -10,7 +10,7 @@
   - name: Comment out mirrorlink.centos.org lines
     replace:
      path: "{{ item.path }}"
-     regexp: 'mirrorlist'
+     regexp: 'mirrorlist='
      replace: '#mirrorlist'
     with_items: "{{ repos.files }}"
   - name: Uncomment mirror.centos.org lines & change to vault.centos.org
