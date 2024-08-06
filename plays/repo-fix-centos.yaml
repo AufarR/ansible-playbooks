@@ -11,7 +11,7 @@
     replace:
      path: "{{ item.path }}"
      regexp: 'mirrorlist='
-     replace: '#mirrorlist'
+     replace: '#mirrorlist='
     with_items: "{{ repos.files }}"
   - name: Uncomment mirror.centos.org lines & change to vault.centos.org
     replace:
