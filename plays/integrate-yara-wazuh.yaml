@@ -89,8 +89,8 @@
     - name: Restore changed files
       copy:
        remote_src: true
-       src: "{{item.path}}.old"
-       dest: "{{item.path}}"
+       src: "{{item.path}}"
+       dest: "{{item.path[:-4]}}"
       when: "{{item.exists}}"
       loop:
       - "{{rescond.results[0].stat}}"
@@ -162,8 +162,8 @@
     - name: Restore changed files
       copy:
        remote_src: true
-       src: "{{item.path}}.old"
-       dest: "{{item.path}}"
+       src: "{{item.path}}"
+       dest: "{{item.path[:-4]}}"
       when: "{{item.exists}}"
       ignore_errors: true
       loop:
