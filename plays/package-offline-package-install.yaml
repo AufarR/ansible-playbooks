@@ -1,0 +1,72 @@
+- name: Offline Install Packages on RPM/APT-based systems via Ansible
+  hosts: "{{ cmdhost | default('pkg') }}" # Use cmdhost variable (e.g. -e "cmdhost=all") to overwrite target host
+  vars:
+   rpmc: "rpm -ivh * --force" # RPM install command
+   debc: "dpkg -i *" # DPKG install command
+   dist_list: # Install configurations for each distribution
+   - dist: "Debian"
+     ver: "20"
+     loc: "pkg/focal/" # Relative to Playbook path
+     cmd: "{{debc}}"
+
+   - dist: "Debian"
+     ver: "22"
+     loc: "pkg/jammy/"
+     cmd: "{{debc}}"
+
+   - dist: "Debian"
+     ver: "24"
+     loc: "pkg/noble/"
+     cmd: "{{debc}}"
+
+   - dist: "RedHat"
+     ver: "7"
+     loc: "pkg/el7/"
+     cmd: "{{rpmc}}"
+
+   - dist: "RedHat"
+     ver: "8"
+     loc: "pkg/el8/"
+     cmd: "{{rpmc}}"
+
+   - dist: "RedHat"
+     ver: "9"
+     loc: "pkg/el9/"
+     cmd: "{{rpmc}}"
+
+  tasks:
+  - name: Get distribution settings
+    set_fact:
+     dist_settings: "{{ dist_list | selectattr('dist', 'equalto', ansible_os_family) | 
+      selectattr('ver', 'equalto', ansible_distribution_major_version) | first }}"
+  
+  - name: Show distribution settings
+    debug:
+     msg: "{{ dist_settings }}" 
+
+  - name: Main block
+    block:
+    - name: Copy files
+      copy:
+       src: "{{ dist_settings.loc }}"
+       dest: /tmp/pkgs/
+
+    - name: Install packages
+      become: true
+      shell:
+       cmd: "{{ dist_settings.cmd }}"
+       chdir: /tmp/pkgs
+
+    - name: Get package version
+      command: jq -V
+      register: pkgver
+
+    - name: Debug package version
+      debug:
+       var: pkgver.stdout
+
+    always:
+    - name: File cleanup
+      file:
+       path: "/tmp/pkgs"
+       state: absent
