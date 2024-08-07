@@ -38,9 +38,9 @@
        dest: "{{item.path}}.old"
       when: "{{item.exists}}"
       loop:
-      - precond.results[0].stat
-      - precond.results[1].stat
-      - precond.results[2].stat
+      - "{{precond.results[0].stat}}"
+      - "{{precond.results[1].stat}}"
+      - "{{precond.results[2].stat}}"
 
     - name: Copy Yara rules file
       copy:
@@ -88,9 +88,9 @@
        dest: "{{item.path}}"
       when: "{{item.exists}}"
       loop:
-      - rescond.results[0].stat
-      - rescond.results[1].stat
-      - rescond.results[2].stat
+      - "{{rescond.results[0].stat}}"
+      - "{{rescond.results[1].stat}}"
+      - "{{rescond.results[2].stat}}"
 
   - name: Manager config block
     when: is_manager
@@ -111,9 +111,9 @@
        dest: "{{item.path}}.old"
       when: "{{item.exists}}"
       loop:
-      - precond.results[0].stat
-      - precond.results[1].stat
-      - precond.results[2].stat
+      - "{{precond.results[0].stat}}"
+      - "{{precond.results[1].stat}}"
+      - "{{precond.results[2].stat}}"
 
     - name: Copy Yara decoder file
       copy:
@@ -161,6 +161,6 @@
        dest: "{{item.path}}"
       when: "{{item.exists}}"
       loop:
-      - rescond.results[0].stat
-      - rescond.results[1].stat
-      - rescond.results[2].stat
+      - "{{rescond.results[0].stat}}"
+      - "{{rescond.results[1].stat}}"
+      - "{{rescond.results[2].stat}}"
