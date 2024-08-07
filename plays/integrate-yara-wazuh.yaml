@@ -2,7 +2,7 @@
   hosts: "{{ cmdhost | default('wazuh') }}" # Use cmdhost variable (e.g. -e "cmdhost=all") to overwrite target host
   become: true
   vars:
-   src: pkg/yara/
+   src: yara/
    rules: /var/ossec/etc/yara/yara_rules.yar
    ossec: /var/ossec/etc/ossec.conf
    script: /var/ossec/active-response/bin/yara.sh
@@ -160,6 +160,7 @@
        src: "{{item.path}}.old"
        dest: "{{item.path}}"
       when: "{{item.exists}}"
+      ignore_errors: true
       loop:
       - "{{rescond.results[0].stat}}"
       - "{{rescond.results[1].stat}}"
