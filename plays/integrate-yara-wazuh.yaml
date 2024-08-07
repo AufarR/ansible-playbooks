@@ -22,6 +22,11 @@
   - name: Agent config block
     when: is_agent
     block:
+    - name: Ensure yara rule directory is created
+      file:
+       path: /var/ossec/etc/yara/
+       state: directory
+
     - name: Get pre-change file stats
       stat:
        path: "{{item}}"
