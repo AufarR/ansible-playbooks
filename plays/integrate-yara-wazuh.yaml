@@ -1,0 +1,166 @@
+- name: Integrate Yara with Wazuh via Ansible
+  hosts: "{{ cmdhost | default('wazuh') }}" # Use cmdhost variable (e.g. -e "cmdhost=all") to overwrite target host
+  become: true
+  vars:
+   src: pkg/yara/
+   rules: /var/ossec/etc/yara/yara_rules.yar
+   ossec: /var/ossec/etc/ossec.conf
+   script: /var/ossec/active-response/bin/yara.sh
+   decoder: /var/ossec/etc/decoders/yara_decoder.conf
+   wazuh_rules: var/ossec/etc/rules/yara_rules.xml
+  tasks:
+  - name: Get manager status
+    stat:
+     path: /var/ossec/bin/wazuh-apid
+    register: is_manager
+
+  - name: Get agent status
+    stat:
+     path: /var/ossec/bin/wazuh-agentd
+    register: is_agent
+
+  - name: Agent config block
+    when: is_agent
+    block:
+    - name: Get pre-change file stats
+      stat:
+       path: "{{item}}"
+      loop:
+      - "{{rules}}"
+      - "{{ossec}}"
+      - "{{script}}"
+      register: precond
+
+    - name: Backup current files (if applicable)
+      copy:
+       remote_src: true
+       src: "{{item.path}}"
+       dest: "{{item.path}}.old"
+      when: "{{item.exists}}"
+      loop:
+      - precond.results[0].stat
+      - precond.results[1].stat
+      - precond.results[2].stat
+
+    - name: Copy Yara rules file
+      copy:
+       src: "{{src}}yara_rules.yar"
+       dest: "{{rules}}"
+       owner: root
+       group: wazuh
+       mode: 0640
+
+    - name: Copy Yara active response script
+      copy:
+       src: "{{src}}yara.sh"
+       dest: "{{script}}"
+       owner: root
+       group: wazuh
+       mode: 0750
+
+    - name: Update agent ossec config
+      blockinfile:
+       path: "{{ossec}}"
+       create: true
+       prepend_newline: true
+       append_newline: true
+       block: "{{ lookup( 'file' , src + 'agent_ossec.conf' ) }}"
+
+    - name: Restart wazuh agent
+      service:
+       name: wazuh-agent
+       state: restarted 
+    
+    rescue:
+    - name: Get current file stats
+      stat:
+       path: "{{item}}"
+      loop:
+      - "{{rules}}.old"
+      - "{{agent}}.old"
+      - "{{script}}.old"
+      register: rescond
+
+    - name: Restore changed files
+      copy:
+       remote_src: true
+       src: "{{item.path}}.old"
+       dest: "{{item.path}}"
+      when: "{{item.exists}}"
+      loop:
+      - rescond.results[0].stat
+      - rescond.results[1].stat
+      - rescond.results[2].stat
+
+  - name: Manager config block
+    when: is_manager
+    block:
+    - name: Get pre-change file stats
+      stat:
+       path: "{{item}}"
+      loop:
+      - "{{decoder}}"
+      - "{{wazuh_rules}}"
+      - "{{ossec}}"
+      register: precond
+
+    - name: Backup current files (if applicable)
+      copy:
+       remote_src: true
+       src: "{{item.path}}"
+       dest: "{{item.path}}.old"
+      when: "{{item.exists}}"
+      loop:
+      - precond.results[0].stat
+      - precond.results[1].stat
+      - precond.results[2].stat
+
+    - name: Copy Yara decoder file
+      copy:
+       src: "{{src}}yara_decoder.conf"
+       dest: "{{decoder}}"
+       owner: root
+       group: wazuh
+       mode: 0640
+
+    - name: Copy Wazuh rules for Yara
+      copy:
+       src: "{{src}}yara_rules.xml"
+       dest: "{{wazuh_rules}}"
+       owner: root
+       group: wazuh
+       mode: 0640
+
+    - name: Update manager ossec config
+      blockinfile:
+       path: /var/ossec/etc/ossec.conf
+       create: true
+       prepend_newline: true
+       append_newline: true
+       block: "{{ lookup( 'file' , src + 'manager_ossec.conf' ) }}"
+
+    - name: Restart wazuh manager
+      service:
+       name: wazuh-manager
+       state: restarted 
+    
+    rescue:
+    - name: Get current file stats
+      stat:
+       path: "{{item}}"
+      loop:
+      - "{{decoder}}.old"
+      - "{{wazuh_rules}}.old"
+      - "{{ossec}}.old"
+      register: rescond
+
+    - name: Restore changed files
+      copy:
+       remote_src: true
+       src: "{{item.path}}.old"
+       dest: "{{item.path}}"
+      when: "{{item.exists}}"
+      loop:
+      - rescond.results[0].stat
+      - rescond.results[1].stat
+      - rescond.results[2].stat
