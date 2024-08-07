@@ -77,7 +77,7 @@
        path: "{{item}}"
       loop:
       - "{{rules}}.old"
-      - "{{agent}}.old"
+      - "{{ossec}}.old"
       - "{{script}}.old"
       register: rescond
 
