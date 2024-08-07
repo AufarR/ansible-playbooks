@@ -3,7 +3,7 @@
   vars:
    rpmc: "rpm -ivh * --force" # RPM install command
    debc: "dpkg -i *" # DPKG install command
-   dist_list: # Install configurations for each distribution
+   dist_list: # Install configurations for each distribution, modify as needed
    - dist: "Debian"
      ver: "20"
      loc: "pkg/focal/" # Relative to Playbook path
@@ -58,7 +58,7 @@
        chdir: /tmp/pkgs
 
     - name: Get package version
-      command: jq -V
+      command: jq -V # Modify command as needed
       register: pkgver
 
     - name: Debug package version
