@@ -6,7 +6,7 @@
    dist_list: # Install configurations for each distribution, modify as needed
    - dist: "Debian"
      ver: "20"
-     loc: "pkg/focal/" # Relative to Playbook path
+     loc: "pkg/focal/" # Relative path, usually to role/task/play location, see https://docs.ansible.com/ansible/latest/playbook_guide/playbook_pathing.html
      cmd: "{{debc}}"
 
    - dist: "Debian"
