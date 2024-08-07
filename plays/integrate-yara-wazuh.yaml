@@ -20,7 +20,7 @@
     register: is_agent
 
   - name: Agent config block
-    when: is_agent
+    when: is_agent.stat.exists
     block:
     - name: Ensure yara rule directory is created
       file:
@@ -69,6 +69,7 @@
        create: true
        prepend_newline: true
        append_newline: true
+       marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
        block: "{{ lookup( 'file' , src + 'agent_ossec.conf' ) }}"
 
     - name: Restart wazuh agent
@@ -98,7 +99,7 @@
       - "{{rescond.results[2].stat}}"
 
   - name: Manager config block
-    when: is_manager
+    when: is_manager.stat.exists
     block:
     - name: Get pre-change file stats
       stat:
@@ -142,12 +143,13 @@
        create: true
        prepend_newline: true
        append_newline: true
+       marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
        block: "{{ lookup( 'file' , src + 'manager_ossec.conf' ) }}"
 
     - name: Restart wazuh manager
       service:
        name: wazuh-manager
-       state: restarted 
+       state: restarted
     
     rescue:
     - name: Get current file stats
