@@ -6,7 +6,7 @@
    rules: /var/ossec/etc/yara/yara_rules.yar
    ossec: /var/ossec/etc/ossec.conf
    script: /var/ossec/active-response/bin/yara.sh
-   decoder: /var/ossec/etc/decoders/yara_decoder.conf
+   decoder: /var/ossec/etc/decoders/yara_decoder.xml
    wazuh_rules: /var/ossec/etc/rules/yara_rules.xml
   tasks:
   - name: Get manager status
