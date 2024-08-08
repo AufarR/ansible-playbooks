@@ -123,7 +123,7 @@
 
     - name: Copy Yara decoder file
       copy:
-       src: "{{src}}yara_decoder.conf"
+       src: "{{src}}yara_decoder.xml"
        dest: "{{decoder}}"
        owner: root
        group: wazuh
